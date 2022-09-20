@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Figures</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .container{
+            height: 100vh;
+            width: 100vw;
+            padding: 50px;
+        }
+        .start_screen{
+            display: flex;
+            align-items: center;
+        }
+        .start_screen input{
+            width: 80vw;
+            height: 5vh;
+            font-size: 20px;
+            margin: 5px 0px;
+        }
+        .start_screen button{
+            width: 10vw;
+            height: 5vh;
+            color: black;
+            border: 2px solid black;
+            background-color: transparent;
+            margin: 5px 0px;
+        }
+        @media screen and (max-width: 500px) {
+            .container{
+                display: flex;
+                align-items: center;
+                flex-direction: column;
+            }
+            .start_screen{
+                flex-direction: column;
+            }
+            .start_screen input{
+                width: 80vw;
+            }
+            .start_screen button{
+                width: 80vw;
+            }
+        }
+        .start_screen button:hover{
+            background-color: black;
+            color: white;
+        }
+        .list_item{
+            list-style: none;
+            margin: 10px 0px;
+            font-size: 20px;
+        }
+        .list_item:hover{
+            font-size: 25px;
+        }
+        .list-title{
+            margin: 20px 0px;
+            font-size: 30px;
+        }
+        .card-screen{
+            display: flex;
+            align-items: center;
+        }
+        .card-name{
+            font-size: 40px;
+        }
+        .card-title{
+            font-size: 20px;
+            margin: 10px 0px;
+        }
+        .card ul{
+            margin: 10px 0px;
+        }
+        .card-screen li{
+            list-style: none;
+            padding: 5px 0px;
+        }
+        .info_screen{
+            padding: 25px 0px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Historical Figures</h1>
+        <br>
+        <div class="start_screen" id="start_screen">
+            <input type="text" name="historical_figure_name" id="historical_figure">
+            <button onclick="get_info()">Get Info</button>
+        </div>
+        <div class="info_screen" id="info_screen">
+            <div class="list_screen" id="list_screen">
+                <ul class="list" id="list"></ul>
+            </div>
+            <div class="card-screen" id="card-screen">
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script>
+        
+        function get_info(arg){
+
+            let name;
+            let historical_figures;
+
+            if(!arg){
+                name = document.getElementById('historical_figure').value
+            }else{
+                name = arg
+            }
+
+            $.ajax({
+            method: 'GET',
+            url: `https://api.api-ninjas.com/v1/historicalfigures?name=${name}`,
+            headers: { 'X-Api-Key': 'q2wQsTlLBTl79tp+55FQQQ==5tyzRhDePNselb2P'},
+            contentType: 'application/json',
+            success: function(result) {
+
+                historical_figures = result
+
+                document.querySelectorAll('.list-title').forEach(e => e.remove());
+                document.getElementById('card-screen').innerHTML = ''
+                document.getElementById('list').innerHTML = ''
+
+                if(historical_figures.length > 1){
+                    show_list(historical_figures)
+                }else if(historical_figures.length == 1){
+                    show_info(historical_figures[0]);
+                }else{
+                    show_error()
+                }
+            },
+            error: function ajaxError(jqXHR) {
+                console.error('Error: ', jqXHR.responseText);
+            }
+        });
+        }
+        
+        function show_list(arr){
+
+            let name = document.getElementById('historical_figure').value
+
+            let new_item = document.createElement('div')
+            new_item.className = 'list-title'
+            new_item.innerHTML = "Which " + name + "?"
+            document.getElementById('list_screen').prepend(new_item)
+
+
+            arr.forEach(ele=>{
+                let new_item = document.createElement('li')
+                new_item.innerHTML = `<a onclick='get_info("${ele.name}")'>${ele.name}</a>`
+                new_item.className = 'list_item'
+                document.getElementById('list').appendChild(new_item)
+            })
+        }
+
+        function show_error(){
+
+            let name = document.getElementById('historical_figure').value
+            let new_item = document.createElement('div')
+            new_item.className = 'list-title'
+            new_item.innerHTML = name + " not found!"
+            document.getElementById('list_screen').prepend(new_item)
+
+        }
+
+        function show_info(ele){
+            
+            let info = ele.info
+
+            if(info){
+                let new_item = `
+                    <div class="card">
+                        <div class="card-name">${ele.name}</div>
+                        <div class="card-title">${ele.title}</div>
+                        <ul>
+                `;
+
+                    for (var property in info) {
+                        if(Array.isArray(info[property])){
+                            new_item += `<li><b>${property}</b> -  ${info[property].join(", ")}</li>`
+                        }else{
+                            new_item += `<li><b>${property}</b> -  ${info[property]}</li>`
+                        }
+                    }
+                    
+                new_item += `
+                        </ul>
+                    </div>
+                `;
+
+                document.getElementById('card-screen').innerHTML = new_item
+            }
+        }
+    </script>
+</body>
+</html>
